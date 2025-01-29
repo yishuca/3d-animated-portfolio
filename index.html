@@ -1,13 +1,200 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lama Dev Portfolio</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adjustable Light Switches</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            overflow: hidden;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .button {
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+        .button:hover {
+            background: #555;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(25px, 1fr));
+            gap: 5px;
+            justify-content: center;
+            padding: 10px;
+            max-width: 100vw;
+        }
+        .switch-container, .bulb-container {
+            text-align: center;
+            font-size: 12px;
+        }
+        .switch, .bulb {
+            width: 100%;
+            max-width: 30px;
+            cursor: pointer;
+        }
+        .switch .base {
+            fill: #333;
+            stroke: #666;
+            stroke-width: 1;
+        }
+        .switch .toggle {
+            fill: #bbb;
+            transition: transform 0.2s, fill 0.2s;
+        }
+        .switch.on .toggle {
+            fill: #0f0;
+            transform: translateY(5px);
+        }
+        .bulb .outline {
+            fill: #444;
+            stroke: #666;
+            stroke-width: 1;
+        }
+        .bulb .glow {
+            fill: transparent;
+            transition: fill 0.2s;
+        }
+        .bulb.on .glow {
+            fill: rgba(255, 255, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Adjustable Light Switches & Bulbs</h1>
+
+    <div class="controls">
+        <button class="button" id="decrease">−</button>
+        <label for="numSwitches">Number of switches: <span id="sliderValue">100</span></label>
+        <input type="range" id="numSwitches" min="1" max="100" value="100">
+        <button class="button" id="increase">+</button>
+    </div>
+
+    <div class="grid-container" id="switches"></div>
+    <div class="grid-container" id="bulbs"></div>
+
+    <script>
+        const switchContainer = document.getElementById('switches');
+        const bulbContainer = document.getElementById('bulbs');
+        const slider = document.getElementById('numSwitches');
+        const sliderValue = document.getElementById('sliderValue');
+        const decreaseBtn = document.getElementById('decrease');
+        const increaseBtn = document.getElementById('increase');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createSwitchesAndBulbs(count) {
+            switchContainer.innerHTML = "";
+            bulbContainer.innerHTML = "";
+
+            let bulbNumbers = Array.from({ length: count }, (_, i) => i + 1);
+            shuffleArray(bulbNumbers);
+
+            for (let i = 0; i < count; i++) {
+                const switchNumber = i + 1;
+                const bulbNumber = bulbNumbers[i];
+
+                // Create switch
+                const switchDiv = document.createElement("div");
+                switchDiv.classList.add("switch-container");
+
+                const switchSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                switchSvg.setAttribute("viewBox", "0 0 30 50");
+                switchSvg.classList.add("switch");
+                switchSvg.setAttribute("data-label", switchNumber);
+                switchSvg.innerHTML = `
+                    <rect class="base" x="5" y="5" width="20" height="40" rx="5"/>
+                    <circle class="toggle" cx="15" cy="20" r="7"/>
+                `;
+
+                const switchLabel = document.createElement("div");
+                switchLabel.textContent = switchNumber;
+
+                switchDiv.appendChild(switchSvg);
+                switchDiv.appendChild(switchLabel);
+
+                // Create bulb
+                const bulbDiv = document.createElement("div");
+                bulbDiv.classList.add("bulb-container");
+
+                const bulbSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                bulbSvg.setAttribute("viewBox", "0 0 30 30");
+                bulbSvg.classList.add("bulb");
+                bulbSvg.setAttribute("data-label", bulbNumber);
+                bulbSvg.innerHTML = `
+                    <circle class="outline" cx="15" cy="15" r="10"/>
+                    <circle class="glow" cx="15" cy="15" r="12"/>
+                `;
+
+                const bulbLabel = document.createElement("div");
+                bulbLabel.textContent = bulbNumber;
+
+                bulbDiv.appendChild(bulbSvg);
+                bulbDiv.appendChild(bulbLabel);
+
+                switchSvg.addEventListener("click", function () {
+                    const switchLabel = this.getAttribute("data-label");
+                    const bulbToToggle = document.querySelector(`.bulb[data-label="${switchLabel}"]`);
+                    if (bulbToToggle) {
+                        this.classList.toggle("on");
+                        bulbToToggle.classList.toggle("on");
+                    }
+                });
+
+                switchContainer.appendChild(switchDiv);
+                bulbContainer.appendChild(bulbDiv);
+            }
+        }
+
+        // Initialize switches and bulbs
+        createSwitchesAndBulbs(slider.value);
+
+        // Update switches and bulbs when slider changes
+        slider.addEventListener("input", function () {
+            sliderValue.textContent = this.value;
+            createSwitchesAndBulbs(parseInt(this.value));
+        });
+
+        // Button controls
+        decreaseBtn.addEventListener("click", function () {
+            if (slider.value > 1) {
+                slider.value--;
+                sliderValue.textContent = slider.value;
+                createSwitchesAndBulbs(parseInt(slider.value));
+            }
+        });
+
+        increaseBtn.addEventListener("click", function () {
+            if (slider.value < 100) {
+                slider.value++;
+                sliderValue.textContent = slider.value;
+                createSwitchesAndBulbs(parseInt(slider.value));
+            }
+        });
+
+    </script>
+
+</body>
 </html>
